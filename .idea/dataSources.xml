@@ -9,7 +9,7 @@
       <jdbc-url>mongodb://localhost:27017/mitocodedb</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="mongodb://localhost:27017/mitocodedb [DEBUG]" group="​ProductServiceApplication" uuid="042d92b9-7ca1-4e7a-ad47-69435cf7f80a">
+    <data-source source="LOCAL" name="mongodb://localhost:27017/mitocodedb [DEBUG]" group="​ProductServiceApplication" uuid="6fcd7d5f-0986-4e99-bc71-6c7d760c9d22">
       <driver-ref>mongo.4</driver-ref>
       <synchronize>true</synchronize>
       <imported>true</imported>
