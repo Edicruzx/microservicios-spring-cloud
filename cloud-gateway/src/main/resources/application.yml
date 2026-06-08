@@ -1,0 +1,24 @@
+server:
+  port: 9080
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=/api/product-service/**
+          filters:
+            - name: StripPrefix
+              args:
+                parts: 2
+
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/user-service/**
+          filters:
+            - name: StripPrefix
+              args:
+                parts: 2

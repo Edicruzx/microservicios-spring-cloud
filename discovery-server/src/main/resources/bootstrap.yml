@@ -1,0 +1,71 @@
+---
+server:
+  port: ${CUSTOM.SERVER.PORT:8761}
+
+spring:
+  config:
+    activate:
+      on-profile: default
+  application:
+    name: discovery-server
+
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
+    lease-expiration-duration-in-seconds: 10
+  client:
+    fetch-registry: false
+    register-with-eureka: false
+    service-url:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka
+  datacenter: ${CUSTOM.SERVER.DATACENTER:Mitocode}
+  environment: ${CUSTOM.SERVER.ENVIRONMENT:Development}
+
+---
+server:
+  port: ${CUSTOM.SERVER.PORT:8762}
+
+spring:
+  config:
+    activate:
+      on-profile: profile-2
+  application:
+    name: discovery-server
+
+eureka:
+  instance:
+    hostname: discovery-server-2.mitocode.com
+    prefer-ip-address: true
+    lease-expiration-duration-in-seconds: 10
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+    service-url:
+      defaultZone: http://discovery-server-1.mitocode.com:8761/eureka/,http://discovery-server-3.mitocode.com:8763/eureka/
+  datacenter: ${CUSTOM.SERVER.DATACENTER:Mitocode}
+  environment: ${CUSTOM.SERVER.ENVIRONMENT:Development}
+
+---
+server:
+  port: ${CUSTOM.SERVER.PORT:8763}
+
+spring:
+  config:
+    activate:
+      on-profile: profile-3
+  application:
+    name: discovery-server
+
+eureka:
+  instance:
+    hostname: discovery-server-3.mitocode.com
+    prefer-ip-address: true
+    lease-expiration-duration-in-seconds: 10
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+    service-url:
+      defaultZone: http://discovery-server-1.mitocode.com:8761/eureka/,http://discovery-server-2.mitocode.com:8762/eureka/
+  datacenter: ${CUSTOM.SERVER.DATACENTER:Mitocode}
+  environment: ${CUSTOM.SERVER.ENVIRONMENT:Development}

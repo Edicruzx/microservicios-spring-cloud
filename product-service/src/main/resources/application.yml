@@ -1,0 +1,10 @@
+application:
+  title: product-service
+  version: 1.0.0
+  autor: 'Mitocode'
+
+spring:
+  data:
+    mongodb:
+      database: mitocodedb
+      uri: mongodb://localhost:27017/mitocodedb

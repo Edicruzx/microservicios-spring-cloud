@@ -1,0 +1,8 @@
+application:
+  title: @project.name@
+  version: @project.version@
+  autor: 'Mitocode'
+
+spring:
+  application:
+    name: discovery-server

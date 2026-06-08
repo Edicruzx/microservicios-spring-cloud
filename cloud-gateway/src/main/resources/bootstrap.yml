@@ -1,0 +1,13 @@
+server:
+  port: ${CUSTOM.SERVER.PORT:9080}
+
+spring:
+  application:
+    name: cloud-gateway
+
+  cloud:
+    config:
+      uri: http://localhost:9000
+      profile: desa
+      enabled: true
+
