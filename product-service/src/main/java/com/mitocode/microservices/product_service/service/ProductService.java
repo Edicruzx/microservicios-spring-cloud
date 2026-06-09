@@ -24,7 +24,7 @@ public class ProductService {
 
     public List<ProductDTO> getAllProducts() throws InterruptedException {
 
-        TimeUnit.MILLISECONDS.sleep(10L);
+        TimeUnit.MILLISECONDS.sleep(500L);
 
         Iterable<ProductEntity> itProducts = productRepository.findAll();
         return StreamSupport.stream(itProducts.spliterator(), false)
