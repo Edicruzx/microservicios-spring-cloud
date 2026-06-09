@@ -12,6 +12,7 @@
         <module name="discovery-server" />
         <module name="user-service" />
         <module name="cloud-gateway" />
+        <module name="authentication-client-oauth2" />
       </profile>
       <profile name="Annotation profile for client-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -19,14 +20,24 @@
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.46/lombok-1.18.46.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.46/lombok-1.18.46.jar" />
+        </processorPath>
+        <module name="client-service" />
+      </profile>
+      <profile name="Annotation profile for client-service-ribbon" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.46/lombok-1.18.46.jar" />
         </processorPath>
         <module name="client-service-ribbon" />
-        <module name="client-service" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="authentication-client-oauth2" options="-parameters" />
       <module name="client-service" options="-parameters" />
       <module name="client-service-ribbon" options="-parameters" />
       <module name="cloud-gateway" options="-parameters" />
