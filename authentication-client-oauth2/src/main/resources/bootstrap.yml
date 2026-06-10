@@ -2,9 +2,11 @@ spring:
   application:
     name: authentication-client-oauth
 
+  profiles:
+    active: desa
+
   cloud:
     config:
       uri: http://localhost:9000
       profile: desa
       enabled: true
-
