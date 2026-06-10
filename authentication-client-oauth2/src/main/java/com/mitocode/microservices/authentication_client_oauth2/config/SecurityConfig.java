@@ -1,17 +1,25 @@
 package com.mitocode.microservices.authentication_client_oauth2.config;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-
+import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+public class SecurityConfig {
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http.authorizeRequests()
-                .antMatchers(HttpMethod.GET, "/authenticate").permitAll()
-                .anyRequest().authenticated()
-                .and().oauth2Login();
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
+        http
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.GET, "/authenticate").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .oauth2Login(Customizer.withDefaults());
+
+        return http.build();
     }
 }
