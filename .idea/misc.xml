@@ -12,6 +12,7 @@
         <option value="$PROJECT_DIR$/client-service/pom.xml" />
         <option value="$PROJECT_DIR$/client-service-ribbon/pom.xml" />
         <option value="$PROJECT_DIR$/authentication-client-oauth2/pom.xml" />
+        <option value="$PROJECT_DIR$/authentication-server-oauth2/pom.xml" />
       </list>
     </option>
   </component>

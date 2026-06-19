@@ -4,9 +4,12 @@ services:
 
   mongo-service:
     image: mongo
-    container_name: mitocode-mongo-service
+    container_name: mitocode-mongo
     ports:
-      - "27017:27017"
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mitocode
+      MONGO_INITDB_ROOT_PASSWORD: mitocode
     networks:
       - mitocode
 
@@ -16,7 +19,46 @@ services:
     ports:
       - "8081:8081"
     environment:
-      ME_CONFIG_MONGODB_SERVER: mongo-service
+      ME_CONFIG_MONGODB_ADMINUSERNAME: mitocode
+      ME_CONFIG_MONGODB_ADMINPASSWORD: mitocode
+      ME_CONFIG_MONGODB_URL: mongodb://mitocode:mitocode@mongo-service:27017
+    networks:
+      - mitocode
+
+  postgres-mitocode:
+    image: postgres:13.1-alpine
+    container_name: mitocode-postgresql
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: mitocode
+      POSTGRES_PASSWORD: mitocode
+      POSTGRES_DB: mitocodedb
+    networks:
+      - mitocode
+
+  Prometheus:
+    image: prom/prometheus
+    container_name: mitocode-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/config:/etc/prometheus/
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    networks:
+      - mitocode
+
+  Grafana:
+    image: grafana/grafana-oss
+    container_name: mitocode-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SERVER_DOMAIN=localhost
     networks:
       - mitocode
 

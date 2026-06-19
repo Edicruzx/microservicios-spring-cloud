@@ -1,6 +1,5 @@
-
 application:
-  title: product-service
+  title: authentication-server-oauth2
   version: 1.0.0
   autor: 'Mitocode'
 
@@ -8,4 +7,4 @@ spring:
   data:
     mongodb:
       database: mitocodedb
-      uri: mongodb://localhost:27017/mitocodedb
+      uri: mongodb://localhost:27018/mitocodedb
