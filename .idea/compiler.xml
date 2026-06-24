@@ -16,7 +16,7 @@
         <module name="user-service" />
         <module name="cloud-gateway" />
       </profile>
-      <profile name="Annotation profile for client-service-ribbon" enabled="true">
+      <profile name="Annotation profile for client-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />

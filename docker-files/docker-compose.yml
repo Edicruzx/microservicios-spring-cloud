@@ -37,6 +37,14 @@ services:
     networks:
       - mitocode
 
+
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: mitocode-zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - mitocode
   prometheus:
     image: prom/prometheus
     container_name: mitocode-prometheus
@@ -55,7 +63,8 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./grafana:/var/lib/grafana
+      - ./grafana:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_SERVER_DOMAIN=localhost
