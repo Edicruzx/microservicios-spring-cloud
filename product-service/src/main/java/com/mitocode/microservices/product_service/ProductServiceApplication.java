@@ -2,6 +2,9 @@ package com.mitocode.microservices.product_service;
 
 import com.mitocode.microservices.product_service.model.entity.ProductEntity;
 import com.mitocode.microservices.product_service.service.repository.ProductRepository;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -13,6 +16,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 
 @SpringBootApplication
 @RequiredArgsConstructor
+@SecurityScheme(name= "mitocode" , scheme = "basic" , type = SecuritySchemeType.HTTP ,  in = SecuritySchemeIn.HEADER )
 public class ProductServiceApplication implements CommandLineRunner {
 
 	private final ProductRepository productRepository;

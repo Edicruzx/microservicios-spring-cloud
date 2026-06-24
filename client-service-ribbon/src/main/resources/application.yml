@@ -1,10 +1,33 @@
+server:
+  port: 9020
+
 application:
-  title: product-service
+  title: client-service-ribbon
   version: 1.0.0
   autor: 'Mitocode'
 
 spring:
-  data:
-    mongodb:
-      database: mitocodedb
-      uri: mongodb://localhost:27017/mitocodedb
+  devtools:
+    restart:
+      enabled: false
+  application:
+    name: client-service-ribbon
+  zipkin:
+    base-url: http://localhost:9411
+  sleuth:
+    sampler:
+      probability: 1.0
+
+user-service:
+  ribbon:
+    eureka:
+      enabled: false
+    listOfServers: localhost:9004,localhost:9044
+    ServerListRefreshInterval: 1500
+
+product-service:
+  ribbon:
+    eureka:
+      enabled: false
+    listOfServers: localhost:9001
+    ServerListRefreshInterval: 1500

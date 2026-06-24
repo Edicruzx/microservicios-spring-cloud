@@ -8,6 +8,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="config-server" />
+        <module name="client-service-ribbon" />
         <module name="discovery-server" />
         <module name="authentication-server-oauth2" />
         <module name="authentication-client-oauth2" />
@@ -15,14 +16,13 @@
         <module name="user-service" />
         <module name="cloud-gateway" />
       </profile>
-      <profile name="Annotation profile for client-service" enabled="true">
+      <profile name="Annotation profile for client-service-ribbon" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.46/lombok-1.18.46.jar" />
         </processorPath>
-        <module name="client-service-ribbon" />
         <module name="client-service" />
       </profile>
     </annotationProcessing>

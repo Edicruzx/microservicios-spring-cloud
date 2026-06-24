@@ -1,4 +1,4 @@
-package com.mitocode.microservices.client_service_ribbon.model.request;
+package com.mitocode.microservices.client_service_ribbon.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class ProductDTO {
 
     private String productId;

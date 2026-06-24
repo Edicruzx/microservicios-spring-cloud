@@ -1,6 +1,6 @@
-package com.mitocode.microservices.client_service_ribbon.expose.web;
+package com.mitocode.microservices.client_service_ribbon.controller;
 
-import com.mitocode.microservices.client_service_ribbon.model.request.ProductDTO;
+import com.mitocode.microservices.client_service_ribbon.dto.ProductDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,8 +17,7 @@ public class ClientController {
 
     @GetMapping("/product")
     public List<ProductDTO> getProductService() {
-        return List.of(Objects.requireNonNull(restTemplate.getForObject("http://product-service/product",ProductDTO[].class
-                )
-        ));
+        ProductDTO[] products = restTemplate.getForObject("http://product-service/product", ProductDTO[].class);
+        return List.of(Objects.requireNonNull(products));
     }
 }
