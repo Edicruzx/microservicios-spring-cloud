@@ -31,33 +31,14 @@ import java.util.List;
         info = @Info(
                 title = "Product Service Microservice",
                 version = "0.0.1",
-                description = "Módulo del ecosistema de arquitectura de Microservicios para la gestión de los productos",
-                contact = @Contact(
-                        name = "Mitocode",
-                        url = "https://github.com/mitocode",
-                        email = "springcloud@mitocodenetwork.com"
-                ),
-                license = @License(
-                        name = "Some license",
-                        url = "https://github.com/jchoy8890"
-                )
+                description = "Modulo del ecosistema de arquitectura de Microservicios para la gestion de los productos",
+                contact = @Contact(name = "Mitocode", url = "https://github.com/mitocode", email = "springcloud@mitocodenetwork.com"),
+                license = @License(name = "Some license", url = "https://github.com/jchoy8890")
         ),
-        servers = {
-                @Server(url = "http://localhost:9001"),
-                @Server(url = "http://localhost:9011")
-        },
-        tags = {
-                @Tag(
-                        name = "ProductService",
-                        description = "Microservicio para la gestión de productos"
-                )
-        }
+        servers = {@Server(url = "http://localhost:9001"), @Server(url = "http://localhost:9011")},
+        tags = {@Tag(name = "ProductService", description = "Microservicio para la gestion de productos")}
 )
-@SecurityScheme(
-        name = "mitocode",
-        type = SecuritySchemeType.HTTP,
-        scheme = "basic"
-)
+@SecurityScheme(name = "mitocode", type = SecuritySchemeType.HTTP, scheme = "basic")
 public class ProductController {
 
     private final ProductService productService;
@@ -69,22 +50,9 @@ public class ProductController {
                     @ApiResponse(
                             description = "Response OK",
                             responseCode = "200",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    array = @ArraySchema(
-                                            schema = @Schema(
-                                                    implementation = ProductDTO.class
-                                            )
-                                    )
-                            )
+                            content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ProductDTO.class)))
                     ),
-                    @ApiResponse(
-                            description = "Response Error",
-                            responseCode = "500",
-                            content = @Content(
-                                    mediaType = "plain/text"
-                            )
-                    )
+                    @ApiResponse(description = "Response Error", responseCode = "500", content = @Content(mediaType = "plain/text"))
             },
             security = @SecurityRequirement(name = "mitocode")
     )
@@ -96,31 +64,8 @@ public class ProductController {
         return ResponseEntity.ok(productService.getAllProducts());
     }
 
-    @Operation(
-            description = "Endpoint que guarda el producto en la Base de Datos",
-            tags = {"ProductService"},
-            responses = {
-                    @ApiResponse(
-                            description = "Response OK",
-                            responseCode = "200",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(
-                                            implementation = ProductDTO.class
-                                    )
-                            )
-                    ),
-                    @ApiResponse(
-                            description = "Response Error",
-                            responseCode = "500",
-                            content = @Content(
-                                    mediaType = "plain/text"
-                            )
-                    )
-            },
-            security = @SecurityRequirement(name = "mitocode")
-    )
-    @PostMapping("/saveProduct")
+    @Operation(description = "Endpoint que guarda el producto en la Base de Datos", tags = {"ProductService"}, security = @SecurityRequirement(name = "mitocode"))
+    @PostMapping("/product")
     public ResponseEntity<ProductDTO> saveProduct(
             @RequestHeader(value = "appCallerName", required = false) String appCallerName,
             @RequestBody ProductDTO productDTO
@@ -128,5 +73,30 @@ public class ProductController {
         log.info("Caller Name: {}", appCallerName);
         log.info("Product: {}", productDTO);
         return ResponseEntity.ok(productService.saveProduct(productDTO));
+    }
+
+    @Operation(description = "Endpoint que actualiza un producto en la Base de Datos", tags = {"ProductService"}, security = @SecurityRequirement(name = "mitocode"))
+    @PutMapping("/product/{productId}")
+    public ResponseEntity<ProductDTO> updateProduct(
+            @RequestHeader(value = "appCallerName", required = false) String appCallerName,
+            @PathVariable String productId,
+            @RequestBody ProductDTO productDTO
+    ) {
+        log.info("Caller Name: {}", appCallerName);
+        log.info("Product ID: {}", productId);
+        log.info("Product: {}", productDTO);
+        return ResponseEntity.ok(productService.updateProduct(productId, productDTO));
+    }
+
+    @Operation(description = "Endpoint que elimina un producto en la Base de Datos", tags = {"ProductService"}, security = @SecurityRequirement(name = "mitocode"))
+    @DeleteMapping("/product/{productId}")
+    public ResponseEntity<Void> deleteProduct(
+            @RequestHeader(value = "appCallerName", required = false) String appCallerName,
+            @PathVariable String productId
+    ) {
+        log.info("Caller Name: {}", appCallerName);
+        log.info("Product ID: {}", productId);
+        productService.deleteProduct(productId);
+        return ResponseEntity.noContent().build();
     }
 }

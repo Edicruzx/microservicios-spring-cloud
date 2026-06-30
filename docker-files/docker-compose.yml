@@ -10,6 +10,9 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: mitocode
       MONGO_INITDB_ROOT_PASSWORD: mitocode
+    volumes:
+      - mongo-data:/data/db
+      - mongo-config:/data/configdb
     networks:
       - mitocode
 
@@ -22,6 +25,8 @@ services:
       ME_CONFIG_MONGODB_ADMINUSERNAME: mitocode
       ME_CONFIG_MONGODB_ADMINPASSWORD: mitocode
       ME_CONFIG_MONGODB_URL: mongodb://mitocode:mitocode@mongo-service:27017
+    depends_on:
+      - mongo-service
     networks:
       - mitocode
 
@@ -34,9 +39,10 @@ services:
       POSTGRES_USER: mitocode
       POSTGRES_PASSWORD: mitocode
       POSTGRES_DB: mitocodedb
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
     networks:
       - mitocode
-
 
   zipkin:
     image: openzipkin/zipkin
@@ -45,6 +51,7 @@ services:
       - "9411:9411"
     networks:
       - mitocode
+
   prometheus:
     image: prom/prometheus
     container_name: mitocode-prometheus
@@ -52,8 +59,10 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus/config:/etc/prometheus/
+      - prometheus-data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
     networks:
       - mitocode
 
@@ -63,7 +72,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./grafana:/var/lib/grafana
+      - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
@@ -80,6 +89,9 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-log:/var/lib/zookeeper/log
     networks:
       - mitocode
 
@@ -100,7 +112,9 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    volumes:
+      - kafka-data:/var/lib/kafka/data
     networks:
       - mitocode
 
@@ -108,3 +122,13 @@ networks:
   mitocode:
     external: true
     name: mitocode-network
+
+volumes:
+  mongo-data:
+  mongo-config:
+  postgres-data:
+  prometheus-data:
+  grafana-data:
+  zookeeper-data:
+  zookeeper-log:
+  kafka-data:

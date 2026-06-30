@@ -8,7 +8,7 @@ spring:
   data:
     mongodb:
       database: mitocodedb
-      uri: mongodb://localhost:27017/mitocodedb
+      uri: mongodb://mitocode:mitocode@localhost:27018/mitocodedb?authSource=admin
 
 management:
   tracing:

@@ -1,6 +1,6 @@
 package com.mitocode.microservices.userservice.config;
 
-import com.mitocode.microservices.userservice.entity.UserEntity;
+import com.mitocode.microservices.commonmodels.model.entity.UserEntity;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
@@ -17,4 +17,5 @@ public class RestRepositoryConfig implements RepositoryRestConfigurer {
 
         }
     }
+
 

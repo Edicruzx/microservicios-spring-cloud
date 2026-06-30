@@ -1,7 +1,7 @@
 package com.mitocode.microservices.product_service.util;
 
 import com.mitocode.microservices.product_service.model.dto.ProductDTO;
-import com.mitocode.microservices.product_service.model.entity.ProductEntity;
+import com.mitocode.microservices.commonmodels.model.entity.ProductEntity;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 

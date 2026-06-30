@@ -1,6 +1,6 @@
 package com.mitocode.microservices.userservice.repository;
 
-import com.mitocode.microservices.userservice.entity.UserEntity;
+import com.mitocode.microservices.commonmodels.model.entity.UserEntity;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.data.rest.core.annotation.RestResource;

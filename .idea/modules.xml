@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Microservicios.iml" filepath="$PROJECT_DIR$/.idea/Microservicios.iml" />
-      <module fileurl="file://$PROJECT_DIR$/client-service-ribbon/client-service-ribbon.iml" filepath="$PROJECT_DIR$/client-service-ribbon/client-service-ribbon.iml" />
     </modules>
   </component>
 </project>

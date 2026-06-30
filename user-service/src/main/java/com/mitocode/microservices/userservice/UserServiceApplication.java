@@ -1,6 +1,6 @@
 package com.mitocode.microservices.userservice;
 
-import com.mitocode.microservices.userservice.entity.UserEntity;
+import com.mitocode.microservices.commonmodels.model.entity.UserEntity;
 import com.mitocode.microservices.userservice.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;

@@ -11,6 +11,7 @@
         <module name="client-service-ribbon" />
         <module name="discovery-server" />
         <module name="authentication-server-oauth2" />
+        <module name="common-models" />
         <module name="authentication-client-oauth2" />
         <module name="product-service" />
         <module name="user-service" />
@@ -21,6 +22,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.46/lombok-1.18.46.jar" />
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.46/lombok-1.18.46.jar" />
         </processorPath>
         <module name="client-service" />
@@ -34,6 +36,7 @@
       <module name="client-service" options="-parameters" />
       <module name="client-service-ribbon" options="-parameters" />
       <module name="cloud-gateway" options="-parameters" />
+      <module name="common-models" options="-parameters" />
       <module name="config-server" options="-parameters" />
       <module name="discovery-server" options="-parameters" />
       <module name="product-service" options="-parameters" />
