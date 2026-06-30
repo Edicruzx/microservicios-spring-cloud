@@ -1,0 +1,26 @@
+server:
+  port: ${CUSTOM.SERVER.PORT:9000}
+
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/Edicruzx/microservicios-spring-cloud.git
+          default-label: main
+          search-paths: config-server-files
+          clone-on-start: true
+          force-pull: true
+          refresh-rate: 30
+
+eureka:
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/,http://localhost:8762/eureka/,http://localhost:8763/eureka/
+
+encrypt:
+  key: mitocode

@@ -1,0 +1,73 @@
+server:
+  port: ${CUSTOM.SERVER.PORT:9080}
+
+spring:
+  main:
+    web-application-type: reactive
+
+  cloud:
+    gateway:
+      routes:
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=/api/product-service/**
+          filters:
+            - StripPrefix=2
+            - name: CircuitBreaker
+              args:
+                name: product-cb
+                fallbackUri: forward:/api/user-service/user
+                statusCodes:
+                  - 400
+                  - 401
+                  - 403
+                  - 500
+                  - 503
+                  - 504
+
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/user-service/**
+          filters:
+            - StripPrefix=2
+            - AddRequestHeader=MitocodeKey, MitocodeValue
+            - AddResponseHeader=MitocodeHeader, MitocodeHeaderValue1
+
+eureka:
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      circuitBreakerProduct:
+        slidingWindowSize: 10
+        failureRateThreshold: 80
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 8
+        slowCallDurationThreshold: 200s
+        slowCallRateThreshold: 50
+    instances:
+      product-cb:
+        baseConfig: circuitBreakerProduct
+
+  timelimiter:
+    configs:
+      timeLimiterProduct:
+        timeoutDuration: 1300ms
+    instances:
+      product-cb:
+        baseConfig: timeLimiterProduct
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans

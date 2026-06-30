@@ -1,0 +1,22 @@
+server:
+  port: ${CUSTOM.SERVER.PORT:8088}
+
+eureka:
+  client:
+    fetchRegistry: true
+    registerWithEureka: true
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 1033853512490-gaqvfutbpa7fqb0rhlual9058nbudfcg.apps.googleusercontent.com
+            client-secret: ${GOOGLE_CLIENT_SECRET:CHANGE_ME}
+            scope:
+              - openid
+              - profile
+              - email

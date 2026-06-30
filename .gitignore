@@ -1,0 +1,18 @@
+# Java / Maven
+target/
+**/target/
+
+# IDE
+.idea/
+*.iml
+# Logs
+*.log
+# Local/old config repository kept only as backup
+course03-mitocode-config-server-files/
+# Draw.io temporary files
+*.drawio.bkp
+*.drawio.dtmp
+# Secrets / local env
+.env
+application-secret.yml
+*-secret.yml
