@@ -12,6 +12,9 @@ public interface CloudGatewayFeign {
     @GetMapping("/api/product-service/product")
     List<ProductDTO> getAllProducts();
 
+    @GetMapping("/api/product-service/product/{productId}")
+    ProductDTO getProductById(@PathVariable("productId") String productId);
+
     @PostMapping("/api/product-service/product")
     ProductDTO saveProduct(@RequestBody ProductDTO productDTO);
 

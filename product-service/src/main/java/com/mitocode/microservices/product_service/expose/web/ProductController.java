@@ -64,6 +64,17 @@ public class ProductController {
         return ResponseEntity.ok(productService.getAllProducts());
     }
 
+
+    @Operation(description = "Endpoint que obtiene un producto por ID", tags = {"ProductService"}, security = @SecurityRequirement(name = "mitocode"))
+    @GetMapping("/product/{productId}")
+    public ResponseEntity<ProductDTO> getProductById(
+            @RequestHeader(value = "appCallerName", required = false) String appCallerName,
+            @PathVariable String productId
+    ) {
+        log.info("Caller Name: {}", appCallerName);
+        log.info("Product ID: {}", productId);
+        return ResponseEntity.ok(productService.getProductById(productId));
+    }
     @Operation(description = "Endpoint que guarda el producto en la Base de Datos", tags = {"ProductService"}, security = @SecurityRequirement(name = "mitocode"))
     @PostMapping("/product")
     public ResponseEntity<ProductDTO> saveProduct(

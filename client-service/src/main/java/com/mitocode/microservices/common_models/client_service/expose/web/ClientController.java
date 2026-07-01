@@ -19,6 +19,11 @@ public class ClientController {
         return ResponseEntity.ok(clientService.getAllProducts());
     }
 
+
+    @GetMapping("/product/{productId}")
+    public ResponseEntity<ProductDTO> getProductById(@PathVariable String productId) {
+        return ResponseEntity.ok(clientService.getProductById(productId));
+    }
     @PostMapping("/product")
     public ResponseEntity<ProductDTO> saveProduct(@RequestBody ProductDTO productDTO) {
         return ResponseEntity.ok(clientService.saveProduct(productDTO));
@@ -32,6 +37,6 @@ public class ClientController {
     @DeleteMapping("/product/{productId}")
     public ResponseEntity<Void> deleteProduct(@PathVariable String productId) {
         clientService.deleteProduct(productId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 }

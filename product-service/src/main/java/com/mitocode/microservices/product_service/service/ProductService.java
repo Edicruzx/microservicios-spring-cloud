@@ -38,6 +38,15 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
+    public ProductDTO getProductById(String productId) {
+        ProductEntity productEntity = productRepository.findById(productId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado: " + productId));
+
+        ProductDTO productDTO = utilMapper.convertEntityToDTO(productEntity);
+        productDTO.setPort(port);
+        return productDTO;
+    }
+
     public ProductDTO saveProduct(ProductDTO productDTO) {
         ProductEntity productEntity = utilMapper.convertDTOToEntity(productDTO);
         productRepository.save(productEntity);

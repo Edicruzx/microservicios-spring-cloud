@@ -12,6 +12,9 @@ public interface ProductFeign {
     @GetMapping("/product")
     List<ProductDTO> getAllProducts();
 
+    @GetMapping("/product/{productId}")
+    ProductDTO getProductById(@PathVariable("productId") String productId);
+
     @PostMapping("/product")
     ProductDTO saveProduct(@RequestBody ProductDTO productDTO);
 

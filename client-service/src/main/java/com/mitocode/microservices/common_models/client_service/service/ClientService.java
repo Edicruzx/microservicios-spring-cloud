@@ -31,6 +31,10 @@ public class ClientService {
         return listProducts;
     }
 
+    public ProductDTO getProductById(String productId) {
+        return cloudGatewayFeign.getProductById(productId);
+    }
+
     @CircuitBreaker(name = "product-cb", fallbackMethod = "getAlternativeSaveProduct")
     public ProductDTO saveProduct(ProductDTO productDTO) {
         return cloudGatewayFeign.saveProduct(productDTO);
@@ -41,22 +45,11 @@ public class ClientService {
         return ProductDTO.builder().productId("P9999").productName("Product Fake").productType("Fake").stock(5).build();
     }
 
-    @CircuitBreaker(name = "product-cb", fallbackMethod = "getAlternativeUpdateProduct")
     public ProductDTO updateProduct(String productId, ProductDTO productDTO) {
         return cloudGatewayFeign.updateProduct(productId, productDTO);
     }
 
-    private ProductDTO getAlternativeUpdateProduct(String productId, ProductDTO productDTO, Throwable e) {
-        log.info(e.getMessage());
-        return ProductDTO.builder().productId(productId).productName("Product Fake").productType("Fake").stock(5).build();
-    }
-
-    @CircuitBreaker(name = "product-cb", fallbackMethod = "getAlternativeDeleteProduct")
     public void deleteProduct(String productId) {
         cloudGatewayFeign.deleteProduct(productId);
-    }
-
-    private void getAlternativeDeleteProduct(String productId, Throwable e) {
-        log.info(e.getMessage());
     }
 }
