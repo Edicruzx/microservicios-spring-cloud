@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,6 +22,27 @@ public class GlobalExceptionHandler {
         ApiError error = new ApiError(statusCode, message, request.getRequestURI());
 
         return ResponseEntity.status(statusCode).body(error);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiError> handleValidationException(
+            MethodArgumentNotValidException exception,
+            HttpServletRequest request
+    ) {
+        String message = exception.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .findFirst()
+                .map(fieldError -> fieldError.getDefaultMessage())
+                .orElse("Datos del producto invalidos");
+
+        ApiError error = new ApiError(
+                HttpStatus.BAD_REQUEST.value(),
+                message,
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.badRequest().body(error);
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)

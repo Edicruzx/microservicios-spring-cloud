@@ -2,6 +2,7 @@ package com.mitocode.microservices.common_models.client_service.expose.web;
 
 import com.mitocode.microservices.common_models.client_service.model.request.ProductDTO;
 import com.mitocode.microservices.common_models.client_service.service.ClientService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,12 +26,12 @@ public class ClientController {
         return ResponseEntity.ok(clientService.getProductById(productId));
     }
     @PostMapping("/product")
-    public ResponseEntity<ProductDTO> saveProduct(@RequestBody ProductDTO productDTO) {
+    public ResponseEntity<ProductDTO> saveProduct(@Valid @RequestBody ProductDTO productDTO) {
         return ResponseEntity.ok(clientService.saveProduct(productDTO));
     }
 
     @PutMapping("/product/{productId}")
-    public ResponseEntity<ProductDTO> updateProduct(@PathVariable String productId, @RequestBody ProductDTO productDTO) {
+    public ResponseEntity<ProductDTO> updateProduct(@PathVariable String productId, @Valid @RequestBody ProductDTO productDTO) {
         return ResponseEntity.ok(clientService.updateProduct(productId, productDTO));
     }
 

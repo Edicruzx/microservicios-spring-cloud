@@ -14,6 +14,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class ProductRestTemplate {
 
+
     private final RestTemplate restTemplate;
 
     public List<ProductDTO> getAllProducts() {

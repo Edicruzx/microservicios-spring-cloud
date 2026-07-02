@@ -35,14 +35,8 @@ public class ClientService {
         return cloudGatewayFeign.getProductById(productId);
     }
 
-    @CircuitBreaker(name = "product-cb", fallbackMethod = "getAlternativeSaveProduct")
     public ProductDTO saveProduct(ProductDTO productDTO) {
         return cloudGatewayFeign.saveProduct(productDTO);
-    }
-
-    private ProductDTO getAlternativeSaveProduct(ProductDTO productDTO, Throwable e) {
-        log.info(e.getMessage());
-        return ProductDTO.builder().productId("P9999").productName("Product Fake").productType("Fake").stock(5).build();
     }
 
     public ProductDTO updateProduct(String productId, ProductDTO productDTO) {

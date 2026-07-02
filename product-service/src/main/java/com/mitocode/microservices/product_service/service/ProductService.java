@@ -40,7 +40,7 @@ public class ProductService {
 
     public ProductDTO getProductById(String productId) {
         ProductEntity productEntity = productRepository.findById(productId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado: " + productId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NO_CONTENT, "Producto no encontrado: " + productId));
 
         ProductDTO productDTO = utilMapper.convertEntityToDTO(productEntity);
         productDTO.setPort(port);
@@ -48,6 +48,10 @@ public class ProductService {
     }
 
     public ProductDTO saveProduct(ProductDTO productDTO) {
+        if (productRepository.existsById(productDTO.getProductId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Producto ya existe: " + productDTO.getProductId());
+        }
+
         ProductEntity productEntity = utilMapper.convertDTOToEntity(productDTO);
         productRepository.save(productEntity);
         productDTO.setPort(port);

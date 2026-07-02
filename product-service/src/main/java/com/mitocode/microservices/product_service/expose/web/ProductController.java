@@ -2,6 +2,7 @@ package com.mitocode.microservices.product_service.expose.web;
 
 import com.mitocode.microservices.product_service.model.dto.ProductDTO;
 import com.mitocode.microservices.product_service.service.ProductService;
+import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -64,7 +65,6 @@ public class ProductController {
         return ResponseEntity.ok(productService.getAllProducts());
     }
 
-
     @Operation(description = "Endpoint que obtiene un producto por ID", tags = {"ProductService"}, security = @SecurityRequirement(name = "mitocode"))
     @GetMapping("/product/{productId}")
     public ResponseEntity<ProductDTO> getProductById(
@@ -79,7 +79,7 @@ public class ProductController {
     @PostMapping("/product")
     public ResponseEntity<ProductDTO> saveProduct(
             @RequestHeader(value = "appCallerName", required = false) String appCallerName,
-            @RequestBody ProductDTO productDTO
+            @Valid @RequestBody ProductDTO productDTO
     ) {
         log.info("Caller Name: {}", appCallerName);
         log.info("Product: {}", productDTO);
@@ -91,7 +91,7 @@ public class ProductController {
     public ResponseEntity<ProductDTO> updateProduct(
             @RequestHeader(value = "appCallerName", required = false) String appCallerName,
             @PathVariable String productId,
-            @RequestBody ProductDTO productDTO
+            @Valid @RequestBody ProductDTO productDTO
     ) {
         log.info("Caller Name: {}", appCallerName);
         log.info("Product ID: {}", productId);
