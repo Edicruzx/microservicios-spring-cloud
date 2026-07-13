@@ -8,10 +8,12 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="config-server" />
+        <module name="product-query-service" />
         <module name="client-service-ribbon" />
         <module name="discovery-server" />
         <module name="authentication-server-oauth2" />
         <module name="common-models" />
+        <module name="audit-service" />
         <module name="authentication-client-oauth2" />
         <module name="product-service" />
         <module name="user-service" />
@@ -23,6 +25,7 @@
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.46/lombok-1.18.46.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.46/lombok-1.18.46.jar" />
         </processorPath>
         <module name="client-service" />
       </profile>
@@ -30,6 +33,7 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="audit-service" options="-parameters" />
       <module name="authentication-client-oauth2" options="-parameters" />
       <module name="authentication-server-oauth2" options="-parameters" />
       <module name="client-service" options="-parameters" />
@@ -38,6 +42,7 @@
       <module name="common-models" options="-parameters" />
       <module name="config-server" options="-parameters" />
       <module name="discovery-server" options="-parameters" />
+      <module name="product-query-service" options="-parameters" />
       <module name="product-service" options="-parameters" />
       <module name="user-service" options="-parameters" />
     </option>

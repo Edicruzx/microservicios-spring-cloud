@@ -1,5 +1,5 @@
 server:
-  port: ${CUSTOM.SERVER.PORT:8088}
+  port: ${AUTH_SERVER_PORT:8088}
 
 eureka:
   client:
@@ -17,4 +17,4 @@ mitocode:
   security:
     client: mitocode
     secret: mitocode
-    key: mitocode
+    key: ${JWT_SIGNING_KEY:mitocode-microservices-jwt-key-2026}

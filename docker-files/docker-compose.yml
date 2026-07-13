@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
 
   mongo-service:
@@ -118,6 +116,21 @@ services:
     networks:
       - mitocode
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.2
+    container_name: mitocode-keycloak
+    command: start-dev --import-realm
+    ports:
+      - "8180:8080"
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    volumes:
+      - ./keycloak/mitocode-realm.json:/opt/keycloak/data/import/mitocode-realm.json:ro
+      - keycloak-data:/opt/keycloak/data
+    networks:
+      - mitocode
+
 networks:
   mitocode:
     external: true
@@ -132,3 +145,4 @@ volumes:
   zookeeper-data:
   zookeeper-log:
   kafka-data:
+  keycloak-data:

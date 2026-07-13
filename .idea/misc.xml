@@ -14,6 +14,8 @@
         <option value="$PROJECT_DIR$/authentication-client-oauth2/pom.xml" />
         <option value="$PROJECT_DIR$/authentication-server-oauth2/pom.xml" />
         <option value="$PROJECT_DIR$/common-models/pom.xml" />
+        <option value="$PROJECT_DIR$/product-query-service/pom.xml" />
+        <option value="$PROJECT_DIR$/audit-service/pom.xml" />
       </list>
     </option>
   </component>

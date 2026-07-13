@@ -2,6 +2,7 @@ package com.mitocode.microservices.product_service.service;
 
 import com.mitocode.microservices.commonmodels.model.entity.ProductEntity;
 import com.mitocode.microservices.product_service.model.dto.ProductDTO;
+import com.mitocode.microservices.product_service.messaging.ProductEventPublisher;
 import com.mitocode.microservices.product_service.service.repository.ProductRepository;
 import com.mitocode.microservices.product_service.util.UtilMapper;
 import lombok.RequiredArgsConstructor;
@@ -19,11 +20,12 @@ import java.util.stream.StreamSupport;
 @RequiredArgsConstructor
 public class ProductService {
 
-    @Value("${server.port}")
+    @Value("${server.port:9001}")
     private Integer port;
 
     private final UtilMapper utilMapper;
     private final ProductRepository productRepository;
+    private final ProductEventPublisher eventPublisher;
 
     public List<ProductDTO> getAllProducts() throws InterruptedException {
         TimeUnit.MILLISECONDS.sleep(500L);
@@ -55,6 +57,7 @@ public class ProductService {
         ProductEntity productEntity = utilMapper.convertDTOToEntity(productDTO);
         productRepository.save(productEntity);
         productDTO.setPort(port);
+        eventPublisher.publish("PRODUCT_CREATED", productDTO);
         return productDTO;
     }
 
@@ -68,6 +71,7 @@ public class ProductService {
 
         ProductDTO response = utilMapper.convertEntityToDTO(savedProduct);
         response.setPort(port);
+        eventPublisher.publish("PRODUCT_UPDATED", response);
         return response;
     }
 
@@ -75,6 +79,8 @@ public class ProductService {
         if (!productRepository.existsById(productId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado: " + productId);
         }
+        ProductDTO deleted = getProductById(productId);
         productRepository.deleteById(productId);
+        eventPublisher.publish("PRODUCT_DELETED", deleted);
     }
 }

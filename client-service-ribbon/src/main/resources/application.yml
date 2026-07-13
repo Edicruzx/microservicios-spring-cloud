@@ -1,5 +1,5 @@
 server:
-  port: 9020
+  port: ${RIBBON_SERVER_PORT:9021}
 
 application:
   title: client-service-ribbon

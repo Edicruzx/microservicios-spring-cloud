@@ -1,5 +1,5 @@
 server:
-  port: ${CUSTOM.SERVER.PORT:9001}
+  port: ${PRODUCT_SERVER_PORT:9001}
 
 eureka:
   client:
@@ -9,6 +9,19 @@ eureka:
       defaultZone: http://localhost:8761/eureka/
 
 spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: com.mitocode.microservices.product_service.messaging.StockCommand
   data:
     mongodb:
       database: mitocodedb

@@ -1,5 +1,5 @@
 server:
-  port: ${CUSTOM.SERVER.PORT:9080}
+  port: ${GATEWAY_SERVER_PORT:9080}
 
 spring:
   application:

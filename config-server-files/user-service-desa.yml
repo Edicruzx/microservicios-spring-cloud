@@ -1,5 +1,5 @@
 server:
-  port: ${CUSTOM.SERVER.PORT:9004}
+  port: ${USER_SERVER_PORT:9002}
 
 eureka:
   client:

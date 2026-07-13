@@ -1,5 +1,5 @@
 server:
-  port: ${CUSTOM.SERVER.PORT:8088}
+  port: ${AUTH_CLIENT_PORT:8089}
 
 eureka:
   client:

@@ -7,3 +7,18 @@ scrape_configs:
       - targets: ["host.docker.internal:9001"]
         labels:
           application: "Product Service"
+
+  - job_name: "Audit Service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["host.docker.internal:9004"]
+
+  - job_name: "Product Query Service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["host.docker.internal:9005"]
+
+  - job_name: "Order Saga Service"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["host.docker.internal:9006"]

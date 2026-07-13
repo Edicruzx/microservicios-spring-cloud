@@ -3,6 +3,9 @@ application:
   version: 1.0.0
   autor: 'Mitocode'
 
+server:
+  port: ${AUTH_CLIENT_PORT:8089}
+
 spring:
   data:
     mongodb:

@@ -39,7 +39,7 @@ import java.util.List;
         servers = {@Server(url = "http://localhost:9001"), @Server(url = "http://localhost:9011")},
         tags = {@Tag(name = "ProductService", description = "Microservicio para la gestion de productos")}
 )
-@SecurityScheme(name = "mitocode", type = SecuritySchemeType.HTTP, scheme = "basic")
+@SecurityScheme(name = "mitocode", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT")
 public class ProductController {
 
     private final ProductService productService;

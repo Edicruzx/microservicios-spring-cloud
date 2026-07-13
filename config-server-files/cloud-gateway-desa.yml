@@ -1,13 +1,65 @@
 server:
-  port: ${CUSTOM.SERVER.PORT:9080}
+  port: ${GATEWAY_SERVER_PORT:9080}
+
+mitocode:
+  security:
+    key: ${JWT_SIGNING_KEY:mitocode-microservices-jwt-key-2026}
+
+security:
+  provider: ${SECURITY_PROVIDER:legacy}
 
 spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/mitocode}
   main:
     web-application-type: reactive
 
   cloud:
     gateway:
       routes:
+        # Strangler: los consumidores antiguos pueden mantener el modelo de escritura
+        # enviando X-Use-Legacy=true; el resto migra al modelo CQRS de lectura.
+        - id: product-catalog-legacy
+          uri: lb://product-service
+          order: -2
+          predicates:
+            - Path=/api/catalog/**
+            - Header=X-Use-Legacy, true
+          filters:
+            - RewritePath=/api/catalog(?<segment>/?.*), /product${segment}
+
+        - id: product-catalog-query
+          uri: lb://product-query-service
+          order: -1
+          predicates:
+            - Path=/api/catalog/**
+          filters:
+            - RewritePath=/api/catalog(?<segment>/?.*), /product-query${segment}
+
+        - id: order-saga-service
+          uri: lb://order-saga-service
+          predicates:
+            - Path=/api/order-saga-service/**
+          filters:
+            - StripPrefix=2
+
+        - id: product-query-service
+          uri: lb://product-query-service
+          predicates:
+            - Path=/api/product-query-service/**
+          filters:
+            - StripPrefix=2
+
+        - id: audit-service
+          uri: lb://audit-service
+          predicates:
+            - Path=/api/audit-service/**
+          filters:
+            - StripPrefix=2
+
         - id: product-service
           uri: lb://product-service
           predicates:
@@ -68,6 +120,10 @@ management:
   tracing:
     sampling:
       probability: 1.0
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
   zipkin:
     tracing:
       endpoint: http://localhost:9411/api/v2/spans

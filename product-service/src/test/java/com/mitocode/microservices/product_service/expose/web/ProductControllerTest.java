@@ -1,68 +1,93 @@
 package com.mitocode.microservices.product_service.expose.web;
 
-import org.hamcrest.Matchers;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.condition.DisabledOnOs;
-import org.junit.jupiter.api.condition.OS;
-import org.junit.jupiter.api.condition.JRE;
-import org.junit.jupiter.api.condition.DisabledOnJre;
+import com.mitocode.microservices.product_service.model.dto.ProductDTO;
+import com.mitocode.microservices.product_service.service.ProductService;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@WebMvcTest(ProductController.class)
 class ProductControllerTest {
 
     @Autowired
-    private MockMvc mockMvc; // mockMvc te permite llamar a tus endpoints sin necesidad de conectar a http
+    private MockMvc mockMvc;
+
+    @MockBean
+    private ProductService productService;
 
     @Test
-    @Order(3)
-    @DisplayName("List products")
-    void when_call_list_products_then_return_status_200() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/product")
-                        .header("appCallerName", "postman"))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content()
-                        .string(Matchers.containsString("Microservicios Avanzados")))
-                .andExpect(MockMvcResultMatchers.content()
-                        .contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+    @DisplayName("GET /product devuelve los productos")
+    void getAllProductsReturnsProducts() throws Exception {
+        when(productService.getAllProducts()).thenReturn(List.of(product()));
+
+        mockMvc.perform(get("/product").header("appCallerName", "test"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0].productId").value("P00003"))
+                .andExpect(jsonPath("$[0].productName").value("Microservicios Avanzados II"));
     }
 
     @Test
-   // @DisabledOnJre(JRE.JAVA_17)
-   // @DisabledOnOs(OS.MAC)
-    @Order(2)
-    @DisplayName("List Products Not Found")
-    void when_call_list_products_then_return_status_400() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/products"))
-                .andExpect(MockMvcResultMatchers.status().isNotFound());
+    @DisplayName("Una ruta inexistente devuelve 404")
+    void unknownRouteReturnsNotFound() throws Exception {
+        mockMvc.perform(get("/products"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    @Order(1)
-    @DisplayName("Save Product")
-    void when_call_save_product_then_return_status_200() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.post("/saveProduct")
-                        .header("appCallerName", "postman")
-                        .content("{\n" +
-                                "    \"productId\": \"P00003\",\n" +
-                                "    \"productName\": \"Microservicios Avanzados II\",\n" +
-                                "    \"productType\": \"Curso\",\n" +
-                                "    \"price\": 750,\n" +
-                                "    \"stock\": 50\n" +
-                                "}")
+    @DisplayName("POST /product guarda un producto válido")
+    void saveProductReturnsSavedProduct() throws Exception {
+        when(productService.saveProduct(any(ProductDTO.class))).thenReturn(product());
+
+        mockMvc.perform(post("/product")
+                        .header("appCallerName", "test")
+                        .content("""
+                                {
+                                  "productId": "P00003",
+                                  "productName": "Microservicios Avanzados II",
+                                  "productType": "Curso",
+                                  "price": 750,
+                                  "stock": 50
+                                }
+                                """)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content()
-                        .string(Matchers.containsString("Microservicios Avanzados")))
-                .andExpect(MockMvcResultMatchers.content()
-                        .contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.productId").value("P00003"))
+                .andExpect(jsonPath("$.port").value(9001));
+    }
+
+    @Test
+    @DisplayName("POST /product valida el cuerpo de la petición")
+    void saveInvalidProductReturnsBadRequest() throws Exception {
+        mockMvc.perform(post("/product")
+                        .content("{}")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    private ProductDTO product() {
+        return ProductDTO.builder()
+                .productId("P00003")
+                .productName("Microservicios Avanzados II")
+                .productType("Curso")
+                .price(750L)
+                .stock(50)
+                .port(9001)
+                .build();
     }
 }
