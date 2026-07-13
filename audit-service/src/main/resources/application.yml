@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: audit-service
+  profiles:
+    active: desa
+  config:
+    import: optional:configserver:http://localhost:9000
+
