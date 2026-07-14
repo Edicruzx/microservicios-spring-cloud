@@ -1,106 +1,124 @@
-services:
+x-app: &app
+  restart: unless-stopped
+  networks: [mitocode]
+  profiles: [application]
 
+x-app-environment: &app-environment
+  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+  SPRING_CLOUD_CONFIG_URI: http://config-server:9000
+  SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:9000
+  SPRING_DATA_MONGODB_URI: mongodb://mitocode:mitocode@mongo-service:27017/mitocodedb?authSource=admin
+  MONGODB_URI: mongodb://mitocode:mitocode@mongo-service:27017/mitocodedb?authSource=admin
+  KAFKA_BOOTSTRAP_SERVERS: broker:29092
+  MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+
+services:
   mongo-service:
-    image: mongo
+    image: mongo:8.0
     container_name: mitocode-mongo
-    ports:
-      - "27018:27017"
+    restart: unless-stopped
+    ports: ["27018:27017"]
     environment:
       MONGO_INITDB_ROOT_USERNAME: mitocode
       MONGO_INITDB_ROOT_PASSWORD: mitocode
     volumes:
       - mongo-data:/data/db
       - mongo-config:/data/configdb
-    networks:
-      - mitocode
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--username", "mitocode", "--password", "mitocode", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [mitocode]
 
   mongo-express:
-    image: mongo-express
+    profiles: [tools]
+    image: mongo-express:1.0.2
     container_name: mitocode-mongo-express
-    ports:
-      - "8081:8081"
+    restart: unless-stopped
+    ports: ["8081:8081"]
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: mitocode
       ME_CONFIG_MONGODB_ADMINPASSWORD: mitocode
-      ME_CONFIG_MONGODB_URL: mongodb://mitocode:mitocode@mongo-service:27017
+      ME_CONFIG_MONGODB_URL: mongodb://mitocode:mitocode@mongo-service:27017/?authSource=admin
     depends_on:
-      - mongo-service
-    networks:
-      - mitocode
+      mongo-service:
+        condition: service_healthy
+    networks: [mitocode]
 
   postgres-mitocode:
-    image: postgres:13.1-alpine
+    profiles: [tools]
+    image: postgres:16-alpine
     container_name: mitocode-postgresql
-    ports:
-      - "5432:5432"
+    restart: unless-stopped
+    ports: ["5432:5432"]
     environment:
       POSTGRES_USER: mitocode
       POSTGRES_PASSWORD: mitocode
       POSTGRES_DB: mitocodedb
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    networks:
-      - mitocode
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mitocode -d mitocodedb"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [mitocode]
 
   zipkin:
-    image: openzipkin/zipkin
+    profiles: [tools]
+    image: openzipkin/zipkin:3
     container_name: mitocode-zipkin
-    ports:
-      - "9411:9411"
-    networks:
-      - mitocode
+    restart: unless-stopped
+    ports: ["9411:9411"]
+    networks: [mitocode]
 
   prometheus:
-    image: prom/prometheus
+    profiles: [tools]
+    image: prom/prometheus:v3.5.0
     container_name: mitocode-prometheus
-    ports:
-      - "9090:9090"
+    restart: unless-stopped
+    ports: ["9090:9090"]
     volumes:
-      - ./prometheus/config:/etc/prometheus/
+      - ./prometheus/config:/etc/prometheus:ro
       - prometheus-data:/prometheus
     command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
-    networks:
-      - mitocode
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+    networks: [mitocode]
 
   grafana:
-    image: grafana/grafana-oss
+    profiles: [tools]
+    image: grafana/grafana-oss:12.1.0
     container_name: mitocode-grafana
-    ports:
-      - "3000:3000"
+    restart: unless-stopped
+    ports: ["3000:3000"]
     volumes:
       - grafana-data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_SERVER_DOMAIN=localhost
-    networks:
-      - mitocode
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    depends_on: [prometheus]
+    networks: [mitocode]
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.1
     container_name: mitocode-kafka-zookeeper
-    hostname: zookeeper
-    ports:
-      - "2181:2181"
+    restart: unless-stopped
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     volumes:
       - zookeeper-data:/var/lib/zookeeper/data
       - zookeeper-log:/var/lib/zookeeper/log
-    networks:
-      - mitocode
+    networks: [mitocode]
 
   broker:
     image: confluentinc/cp-kafka:7.6.1
     container_name: mitocode-kafka-broker
-    hostname: broker
-    ports:
-      - "9092:9092"
-    depends_on:
-      - zookeeper
+    restart: unless-stopped
+    ports: ["9092:9092"]
+    depends_on: [zookeeper]
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -111,29 +129,200 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-    volumes:
-      - kafka-data:/var/lib/kafka/data
-    networks:
-      - mitocode
+    volumes: ["kafka-data:/var/lib/kafka/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+    networks: [mitocode]
 
   keycloak:
+    profiles: [tools]
     image: quay.io/keycloak/keycloak:26.2
     container_name: mitocode-keycloak
+    restart: unless-stopped
     command: start-dev --import-realm
-    ports:
-      - "8180:8080"
+    ports: ["8180:8080"]
     environment:
-      KC_BOOTSTRAP_ADMIN_USERNAME: admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
     volumes:
       - ./keycloak/mitocode-realm.json:/opt/keycloak/data/import/mitocode-realm.json:ro
       - keycloak-data:/opt/keycloak/data
-    networks:
-      - mitocode
+    networks: [mitocode]
+
+  discovery-server:
+    <<: *app
+    image: mitocode/discovery-server:local
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args: {SERVICE: discovery-server}
+    ports: ["8761:8761"]
+    environment:
+      DISCOVERY_SERVER_PORT: 8761
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 3 bash -c '</dev/tcp/localhost/8761'"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  config-server:
+    <<: *app
+    image: mitocode/config-server:local
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args: {SERVICE: config-server}
+    ports: ["9000:9000"]
+    environment:
+      CONFIG_SERVER_PORT: 9000
+      CONFIG_REPO_PATH: /config-repo
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+    volumes:
+      - ../config-server-files:/config-repo:ro
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 3 bash -c '</dev/tcp/localhost/9000'"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  user-service:
+    <<: *app
+    image: mitocode/user-service:local
+    build: {context: .., dockerfile: Dockerfile, args: {SERVICE: user-service}}
+    ports: ["9002:9002"]
+    environment:
+      <<: *app-environment
+      USER_SERVER_PORT: 9002
+      APP_SEED_ENABLED: "true"
+    depends_on:
+      config-server: {condition: service_healthy}
+      mongo-service: {condition: service_healthy}
+
+  product-service:
+    <<: *app
+    image: mitocode/product-service:local
+    build: {context: .., dockerfile: Dockerfile, args: {SERVICE: product-service}}
+    ports: ["9001:9001"]
+    environment:
+      <<: *app-environment
+      PRODUCT_SERVER_PORT: 9001
+    depends_on:
+      config-server: {condition: service_healthy}
+      mongo-service: {condition: service_healthy}
+      broker: {condition: service_healthy}
+
+  audit-service:
+    <<: *app
+    image: mitocode/audit-service:local
+    build: {context: .., dockerfile: Dockerfile, args: {SERVICE: audit-service}}
+    ports: ["9004:9004"]
+    environment:
+      <<: *app-environment
+      AUDIT_SERVER_PORT: 9004
+    depends_on:
+      config-server: {condition: service_healthy}
+      mongo-service: {condition: service_healthy}
+      broker: {condition: service_healthy}
+
+  product-query-service:
+    <<: *app
+    image: mitocode/product-query-service:local
+    build: {context: .., dockerfile: Dockerfile, args: {SERVICE: product-query-service}}
+    ports: ["9005:9005"]
+    environment:
+      <<: *app-environment
+      QUERY_SERVER_PORT: 9005
+    depends_on:
+      config-server: {condition: service_healthy}
+      mongo-service: {condition: service_healthy}
+      broker: {condition: service_healthy}
+
+  order-saga-service:
+    <<: *app
+    image: mitocode/order-saga-service:local
+    build: {context: .., dockerfile: Dockerfile, args: {SERVICE: order-saga-service}}
+    ports: ["9006:9006"]
+    environment:
+      <<: *app-environment
+      SAGA_SERVER_PORT: 9006
+    depends_on:
+      config-server: {condition: service_healthy}
+      mongo-service: {condition: service_healthy}
+      broker: {condition: service_healthy}
+
+  authentication-server-oauth2:
+    <<: *app
+    image: mitocode/authentication-server-oauth2:local
+    build: {context: .., dockerfile: Dockerfile, args: {SERVICE: authentication-server-oauth2}}
+    ports: ["8088:8088"]
+    environment:
+      <<: *app-environment
+      AUTH_SERVER_PORT: 8088
+      JWT_SIGNING_KEY: ${JWT_SIGNING_KEY:-mitocode-microservices-jwt-key-2026}
+    depends_on:
+      config-server: {condition: service_healthy}
+      mongo-service: {condition: service_healthy}
+
+  authentication-client-oauth2:
+    <<: *app
+    image: mitocode/authentication-client-oauth2:local
+    build: {context: .., dockerfile: Dockerfile, args: {SERVICE: authentication-client-oauth2}}
+    ports: ["8089:8089"]
+    environment:
+      <<: *app-environment
+      AUTH_CLIENT_PORT: 8089
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-CHANGE_ME}
+    depends_on:
+      config-server: {condition: service_healthy}
+
+  client-service:
+    <<: *app
+    image: mitocode/client-service:local
+    build: {context: .., dockerfile: Dockerfile, args: {SERVICE: client-service}}
+    ports: ["9020:9020"]
+    environment:
+      <<: *app-environment
+      CLIENT_SERVER_PORT: 9020
+    depends_on:
+      config-server: {condition: service_healthy}
+
+  client-service-ribbon:
+    <<: *app
+    image: mitocode/client-service-ribbon:local
+    build: {context: .., dockerfile: Dockerfile, args: {SERVICE: client-service-ribbon}}
+    ports: ["9021:9021"]
+    environment:
+      RIBBON_SERVER_PORT: 9021
+      USER_SERVICE_RIBBON_LISTOFSERVERS: user-service:9002
+      PRODUCT_SERVICE_RIBBON_LISTOFSERVERS: product-service:9001
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411
+    depends_on:
+      config-server: {condition: service_healthy}
+      user-service: {condition: service_started}
+      product-service: {condition: service_started}
+
+  cloud-gateway:
+    <<: *app
+    image: mitocode/cloud-gateway:local
+    build: {context: .., dockerfile: Dockerfile, args: {SERVICE: cloud-gateway}}
+    ports: ["9080:9080"]
+    environment:
+      <<: *app-environment
+      GATEWAY_SERVER_PORT: 9080
+      SECURITY_PROVIDER: ${SECURITY_PROVIDER:-legacy}
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/mitocode
+      JWT_SIGNING_KEY: ${JWT_SIGNING_KEY:-mitocode-microservices-jwt-key-2026}
+    depends_on:
+      config-server: {condition: service_healthy}
 
 networks:
   mitocode:
-    external: true
     name: mitocode-network
 
 volumes:

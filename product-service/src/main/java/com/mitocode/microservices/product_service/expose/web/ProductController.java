@@ -75,6 +75,7 @@ public class ProductController {
         log.info("Product ID: {}", productId);
         return ResponseEntity.ok(productService.getProductById(productId));
     }
+
     @Operation(description = "Endpoint que guarda el producto en la Base de Datos", tags = {"ProductService"}, security = @SecurityRequirement(name = "mitocode"))
     @PostMapping("/product")
     public ResponseEntity<ProductDTO> saveProduct(

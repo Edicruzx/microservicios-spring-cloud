@@ -9,7 +9,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class ProductEventListener {
     private final AuditRepository repository;
-    public ProductEventListener(AuditRepository repository) { this.repository = repository; }
+
+    public ProductEventListener(AuditRepository repository) {
+        this.repository = repository;
+    }
+
     @KafkaListener(topics = "product-events", groupId = "audit-service")
-    public void consume(ProductEvent event) { repository.save(AuditEntry.from(event)); }
+    public void consume(ProductEvent event) {
+        repository.save(AuditEntry.from(event));
+    }
 }

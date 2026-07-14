@@ -5,7 +5,7 @@ if (-not $maven) { throw "No se encontro Maven. Ejecuta cualquier mvnw.cmd una v
 
 $modules = @(
     "common-models", "discovery-server", "config-server", "user-service",
-    "product-service", "client-service", "cloud-gateway",
+    "product-service", "client-service", "client-service-ribbon", "cloud-gateway",
     "authentication-server-oauth2", "authentication-client-oauth2",
     "audit-service", "product-query-service", "order-saga-service"
 )

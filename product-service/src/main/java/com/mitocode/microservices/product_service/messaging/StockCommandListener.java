@@ -39,5 +39,7 @@ public class StockCommandListener {
         }
     }
 
-    private void send(StockResult result) { kafka.send("stock-results", result.sagaId(), result); }
+    private void send(StockResult result) {
+        kafka.send("stock-results", result.sagaId(), result);
+    }
 }

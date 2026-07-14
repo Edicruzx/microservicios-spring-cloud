@@ -23,6 +23,7 @@
 	<properties>
 		<java.version>17</java.version>
 		<spring-cloud.version>2024.0.1</spring-cloud.version>
+		<start-class>com.mitocode.microservices.cloud_gateway.CloudGatewayApplication</start-class>
 	</properties>
 
 	<dependencyManagement>

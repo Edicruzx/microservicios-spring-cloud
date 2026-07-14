@@ -1,5 +1,36 @@
 # Ejecución local del proyecto
 
+## Infraestructura esencial con Docker
+
+Requisitos: Docker Desktop con Docker Compose v2 iniciado. Desde la raíz:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\start-project.ps1
+```
+
+Por defecto solo se inician MongoDB y Kafka con Zookeeper. Los microservicios Java se ejecutan desde el IDE.
+
+Si necesitas una prueba integral con todos los microservicios y herramientas dentro de Docker, usa explícitamente:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\start-project.ps1 -FullDocker
+```
+
+Para ver el estado o los logs:
+
+```powershell
+docker compose -f .\docker-files\docker-compose.yml ps
+docker compose -f .\docker-files\docker-compose.yml logs -f cloud-gateway
+```
+
+Para detener el proyecto conservando los datos:
+
+```powershell
+docker compose -f .\docker-files\docker-compose.yml down
+```
+
+Usa `down -v` solamente cuando quieras eliminar también los datos locales de MongoDB, Kafka, PostgreSQL, Grafana y Keycloak.
+
 ## 1. Infraestructura
 
 Desde PowerShell, en la raíz del proyecto:
