@@ -1,0 +1,10 @@
+.git
+.idea
+.agents
+.codex
+**/target
+**/*.iml
+**/*.log
+course03-mitocode-config-server-files
+docker-files/grafana/grafana.db
+docker-files/grafana/plugins
