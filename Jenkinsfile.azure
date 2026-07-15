@@ -1,0 +1,74 @@
+pipeline {
+  agent {
+    node {
+      label 'built-in'
+      customWorkspace 'D:\\Microservicios'
+    }
+  }
+
+  options {
+    disableConcurrentBuilds()
+  }
+
+  environment {
+    ACR_NAME = 'mitocodeacr9986'
+    ACR_LOGIN_SERVER = 'mitocodeacr9986.azurecr.io'
+    IMAGE_REPOSITORY = 'discovery-server'
+    K8S_NAMESPACE = 'mitocode'
+    K8S_DEPLOYMENT = 'discovery-server'
+    DOCKER_EXE = 'C:\\Users\\Usuario\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
+    KUBECTL_EXE = 'C:\\Users\\Usuario\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\kubectl.exe'
+  }
+
+  stages {
+    stage('Preflight') {
+      steps {
+        bat '"%DOCKER_EXE%" version'
+        bat '"%KUBECTL_EXE%" version --client'
+      }
+    }
+
+    stage('Build image') {
+      steps {
+        bat '''"%DOCKER_EXE%" build --file Dockerfile ^
+          --build-arg SERVICE=discovery-server ^
+          --tag %ACR_LOGIN_SERVER%/%IMAGE_REPOSITORY%:%BUILD_NUMBER% .'''
+      }
+    }
+
+    stage('Push image to ACR') {
+      steps {
+        withCredentials([usernamePassword(
+          credentialsId: 'acr-mitocode',
+          usernameVariable: 'ACR_USR',
+          passwordVariable: 'ACR_PSW'
+        )]) {
+          bat '@<nul set /p "=%ACR_PSW%" | "%DOCKER_EXE%" login %ACR_LOGIN_SERVER% --username %ACR_USR% --password-stdin'
+          bat '"%DOCKER_EXE%" push %ACR_LOGIN_SERVER%/%IMAGE_REPOSITORY%:%BUILD_NUMBER%'
+        }
+      }
+    }
+
+    stage('Deploy to AKS') {
+      steps {
+        withCredentials([file(
+          credentialsId: 'kubeconfig-mitocode',
+          variable: 'KUBECONFIG_FILE'
+        )]) {
+          bat '''set "KUBECONFIG=%KUBECONFIG_FILE%" && "%KUBECTL_EXE%" apply -f k8s/discovery-server.yaml'''
+          bat '''set "KUBECONFIG=%KUBECONFIG_FILE%" && "%KUBECTL_EXE%" set image deployment/%K8S_DEPLOYMENT% %IMAGE_REPOSITORY%=%ACR_LOGIN_SERVER%/%IMAGE_REPOSITORY%:%BUILD_NUMBER% --namespace %K8S_NAMESPACE%'''
+          bat '''set "KUBECONFIG=%KUBECONFIG_FILE%" && "%KUBECTL_EXE%" rollout status deployment/%K8S_DEPLOYMENT% --namespace %K8S_NAMESPACE% --timeout=180s'''
+        }
+      }
+    }
+  }
+
+  post {
+    always {
+      bat returnStatus: true, script: '"%DOCKER_EXE%" logout %ACR_LOGIN_SERVER%'
+    }
+    success {
+      echo "Deployed %ACR_LOGIN_SERVER%/%IMAGE_REPOSITORY%:%BUILD_NUMBER% to AKS"
+    }
+  }
+}

@@ -12,6 +12,8 @@ course03-mitocode-config-server-files/
 # Draw.io temporary files
 *.drawio.bkp
 *.drawio.dtmp
+# Local video analysis generated during documentation
+.video68-analysis/
 # Secrets / local env
 .env
 application-secret.yml
