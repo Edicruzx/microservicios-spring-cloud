@@ -31,15 +31,18 @@ pipeline {
     stage('Initialize') {
       steps {
         script {
-          env.IMAGE_REPOSITORY = params.SERVICE_NAME
-          env.K8S_DEPLOYMENT = params.SERVICE_NAME
-          env.K8S_MANIFEST = "k8s/${params.SERVICE_NAME}.yaml"
-          env.RENDERED_MANIFEST = "k8s/${params.SERVICE_NAME}.generated.yaml"
-          env.CONTAINER_PORT = params.SERVICE_NAME == 'discovery-server' ? '8761' : '9000'
-          env.TARGET_REPLICAS = params.VIDEO_DEMO_MODE
-            ? (params.SERVICE_NAME == 'discovery-server' ? '3' : '5')
-            : (params.SERVICE_NAME == 'discovery-server' ? '1' : '2')
-          currentBuild.displayName = "#${env.BUILD_NUMBER} ${params.SERVICE_NAME}"
+          def service = params.SERVICE_NAME ?: 'discovery-server'
+          def demoMode = params.VIDEO_DEMO_MODE == true
+          env.SELECTED_SERVICE = service
+          env.IMAGE_REPOSITORY = service
+          env.K8S_DEPLOYMENT = service
+          env.K8S_MANIFEST = "k8s/${service}.yaml"
+          env.RENDERED_MANIFEST = "k8s/${service}.generated.yaml"
+          env.CONTAINER_PORT = service == 'discovery-server' ? '8761' : '9000'
+          env.TARGET_REPLICAS = demoMode
+            ? (service == 'discovery-server' ? '3' : '5')
+            : (service == 'discovery-server' ? '1' : '2')
+          currentBuild.displayName = "#${env.BUILD_NUMBER} ${service}"
         }
       }
     }
@@ -63,7 +66,7 @@ pipeline {
       steps {
         bat '''"%DOCKER_EXE%" build ^
           --file Dockerfile ^
-          --build-arg SERVICE=%SERVICE_NAME% ^
+          --build-arg SERVICE=%SELECTED_SERVICE% ^
           --tag %ACR_LOGIN_SERVER%/%IMAGE_REPOSITORY%:%BUILD_NUMBER% ^
           .'''
       }
@@ -92,7 +95,7 @@ pipeline {
           writeFile file: env.RENDERED_MANIFEST, text: manifest
 
           def publicService = readFile('k8s/public-service.yaml')
-            .replace('SERVICE_NAME', params.SERVICE_NAME)
+            .replace('SERVICE_NAME', env.SELECTED_SERVICE)
             .replace('CONTAINER_PORT', env.CONTAINER_PORT)
           writeFile file: 'k8s/public-service.generated.yaml', text: publicService
         }
@@ -106,7 +109,7 @@ pipeline {
           variable: 'KUBECONFIG_FILE'
         )]) {
           script {
-            if (params.SERVICE_NAME == 'config-server') {
+            if (env.SELECTED_SERVICE == 'config-server') {
               bat '''set "KUBECONFIG=%KUBECONFIG_FILE%" && "%KUBECTL_EXE%" create configmap config-server-files --namespace %K8S_NAMESPACE% --from-file=config-server-files --dry-run=client --output yaml > k8s\\config-server-files.generated.yaml'''
               bat '''set "KUBECONFIG=%KUBECONFIG_FILE%" && "%KUBECTL_EXE%" apply -f k8s\\config-server-files.generated.yaml'''
             }
@@ -116,11 +119,11 @@ pipeline {
             if (params.VIDEO_DEMO_MODE) {
               bat '''set "KUBECONFIG=%KUBECONFIG_FILE%" && "%KUBECTL_EXE%" apply -f k8s\\public-service.generated.yaml'''
             } else {
-              bat '''set "KUBECONFIG=%KUBECONFIG_FILE%" && "%KUBECTL_EXE%" delete service %SERVICE_NAME%-public --namespace %K8S_NAMESPACE% --ignore-not-found'''
+              bat '''set "KUBECONFIG=%KUBECONFIG_FILE%" && "%KUBECTL_EXE%" delete service %SELECTED_SERVICE%-public --namespace %K8S_NAMESPACE% --ignore-not-found'''
             }
 
             bat '''set "KUBECONFIG=%KUBECONFIG_FILE%" && "%KUBECTL_EXE%" rollout status deployment/%K8S_DEPLOYMENT% --namespace %K8S_NAMESPACE% --timeout=300s'''
-            bat '''set "KUBECONFIG=%KUBECONFIG_FILE%" && "%KUBECTL_EXE%" get pods,services --namespace %K8S_NAMESPACE% -l app=%SERVICE_NAME% -o wide'''
+            bat '''set "KUBECONFIG=%KUBECONFIG_FILE%" && "%KUBECTL_EXE%" get pods,services --namespace %K8S_NAMESPACE% -l app=%SELECTED_SERVICE% -o wide'''
           }
         }
       }
