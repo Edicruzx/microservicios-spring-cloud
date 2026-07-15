@@ -1,38 +1,72 @@
 pipeline {
-  agent {
-    node {
-      label 'built-in'
-      customWorkspace 'D:\\Microservicios'
-    }
-  }
+  agent { label 'built-in' }
 
   options {
     disableConcurrentBuilds()
+    skipDefaultCheckout(true)
+  }
+
+  parameters {
+    choice(
+      name: 'SERVICE_NAME',
+      choices: ['discovery-server', 'config-server'],
+      description: 'Microservicio que Jenkins construira y desplegara'
+    )
+    booleanParam(
+      name: 'VIDEO_DEMO_MODE',
+      defaultValue: false,
+      description: 'Replica el video: 3/5 replicas y un LoadBalancer publico'
+    )
   }
 
   environment {
     ACR_NAME = 'mitocodeacr9986'
     ACR_LOGIN_SERVER = 'mitocodeacr9986.azurecr.io'
-    IMAGE_REPOSITORY = 'discovery-server'
     K8S_NAMESPACE = 'mitocode'
-    K8S_DEPLOYMENT = 'discovery-server'
     DOCKER_EXE = 'C:\\Users\\Usuario\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
     KUBECTL_EXE = 'C:\\Users\\Usuario\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\kubectl.exe'
+    PATH+DOCKER = 'C:\\Users\\Usuario\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin'
   }
 
   stages {
+    stage('Initialize') {
+      steps {
+        script {
+          env.IMAGE_REPOSITORY = params.SERVICE_NAME
+          env.K8S_DEPLOYMENT = params.SERVICE_NAME
+          env.K8S_MANIFEST = "k8s/${params.SERVICE_NAME}.yaml"
+          env.RENDERED_MANIFEST = "k8s/${params.SERVICE_NAME}.generated.yaml"
+          env.CONTAINER_PORT = params.SERVICE_NAME == 'discovery-server' ? '8761' : '9000'
+          env.TARGET_REPLICAS = params.VIDEO_DEMO_MODE
+            ? (params.SERVICE_NAME == 'discovery-server' ? '3' : '5')
+            : (params.SERVICE_NAME == 'discovery-server' ? '1' : '2')
+          currentBuild.displayName = "#${env.BUILD_NUMBER} ${params.SERVICE_NAME}"
+        }
+      }
+    }
+
     stage('Preflight') {
       steps {
         bat '"%DOCKER_EXE%" version'
         bat '"%KUBECTL_EXE%" version --client'
+        bat 'git --version'
       }
     }
 
-    stage('Build image') {
+    stage('Checkout code') {
       steps {
-        bat '''"%DOCKER_EXE%" build --file Dockerfile ^
-          --build-arg SERVICE=discovery-server ^
-          --tag %ACR_LOGIN_SERVER%/%IMAGE_REPOSITORY%:%BUILD_NUMBER% .'''
+        deleteDir()
+        git branch: 'main', url: 'https://github.com/Edicruzx/microservicios-spring-cloud.git'
+      }
+    }
+
+    stage('Build project and image') {
+      steps {
+        bat '''"%DOCKER_EXE%" build ^
+          --file Dockerfile ^
+          --build-arg SERVICE=%SERVICE_NAME% ^
+          --tag %ACR_LOGIN_SERVER%/%IMAGE_REPOSITORY%:%BUILD_NUMBER% ^
+          .'''
       }
     }
 
@@ -49,15 +83,46 @@ pipeline {
       }
     }
 
+    stage('Render Kubernetes manifest') {
+      steps {
+        script {
+          def manifest = readFile(env.K8S_MANIFEST)
+            .replace('IMAGE_REGISTRY', env.ACR_LOGIN_SERVER)
+            .replace('IMAGE_TAG', env.BUILD_NUMBER)
+            .replace('REPLICA_COUNT', env.TARGET_REPLICAS)
+          writeFile file: env.RENDERED_MANIFEST, text: manifest
+
+          def publicService = readFile('k8s/public-service.yaml')
+            .replace('SERVICE_NAME', params.SERVICE_NAME)
+            .replace('CONTAINER_PORT', env.CONTAINER_PORT)
+          writeFile file: 'k8s/public-service.generated.yaml', text: publicService
+        }
+      }
+    }
+
     stage('Deploy to AKS') {
       steps {
         withCredentials([file(
           credentialsId: 'kubeconfig-mitocode',
           variable: 'KUBECONFIG_FILE'
         )]) {
-          bat '''set "KUBECONFIG=%KUBECONFIG_FILE%" && "%KUBECTL_EXE%" apply -f k8s/discovery-server.yaml'''
-          bat '''set "KUBECONFIG=%KUBECONFIG_FILE%" && "%KUBECTL_EXE%" set image deployment/%K8S_DEPLOYMENT% %IMAGE_REPOSITORY%=%ACR_LOGIN_SERVER%/%IMAGE_REPOSITORY%:%BUILD_NUMBER% --namespace %K8S_NAMESPACE%'''
-          bat '''set "KUBECONFIG=%KUBECONFIG_FILE%" && "%KUBECTL_EXE%" rollout status deployment/%K8S_DEPLOYMENT% --namespace %K8S_NAMESPACE% --timeout=180s'''
+          script {
+            if (params.SERVICE_NAME == 'config-server') {
+              bat '''set "KUBECONFIG=%KUBECONFIG_FILE%" && "%KUBECTL_EXE%" create configmap config-server-files --namespace %K8S_NAMESPACE% --from-file=config-server-files --dry-run=client --output yaml > k8s\\config-server-files.generated.yaml'''
+              bat '''set "KUBECONFIG=%KUBECONFIG_FILE%" && "%KUBECTL_EXE%" apply -f k8s\\config-server-files.generated.yaml'''
+            }
+
+            bat '''set "KUBECONFIG=%KUBECONFIG_FILE%" && "%KUBECTL_EXE%" apply -f "%RENDERED_MANIFEST%"'''
+
+            if (params.VIDEO_DEMO_MODE) {
+              bat '''set "KUBECONFIG=%KUBECONFIG_FILE%" && "%KUBECTL_EXE%" apply -f k8s\\public-service.generated.yaml'''
+            } else {
+              bat '''set "KUBECONFIG=%KUBECONFIG_FILE%" && "%KUBECTL_EXE%" delete service %SERVICE_NAME%-public --namespace %K8S_NAMESPACE% --ignore-not-found'''
+            }
+
+            bat '''set "KUBECONFIG=%KUBECONFIG_FILE%" && "%KUBECTL_EXE%" rollout status deployment/%K8S_DEPLOYMENT% --namespace %K8S_NAMESPACE% --timeout=300s'''
+            bat '''set "KUBECONFIG=%KUBECONFIG_FILE%" && "%KUBECTL_EXE%" get pods,services --namespace %K8S_NAMESPACE% -l app=%SERVICE_NAME% -o wide'''
+          }
         }
       }
     }
@@ -68,7 +133,7 @@ pipeline {
       bat returnStatus: true, script: '"%DOCKER_EXE%" logout %ACR_LOGIN_SERVER%'
     }
     success {
-      echo "Deployed %ACR_LOGIN_SERVER%/%IMAGE_REPOSITORY%:%BUILD_NUMBER% to AKS"
+      echo "Deployed ${env.ACR_LOGIN_SERVER}/${env.IMAGE_REPOSITORY}:${env.BUILD_NUMBER} to AKS with ${env.TARGET_REPLICAS} replica(s)"
     }
   }
 }

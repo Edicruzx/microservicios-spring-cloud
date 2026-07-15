@@ -14,6 +14,8 @@ course03-mitocode-config-server-files/
 *.drawio.dtmp
 # Local video analysis generated during documentation
 .video68-analysis/
+# Jenkins renders these templates for each build
+k8s/*.generated.yaml
 # Secrets / local env
 .env
 application-secret.yml

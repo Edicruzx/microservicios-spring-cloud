@@ -1,75 +1,83 @@
-# Jenkins: Discovery Server hacia ACR y AKS
+# Jenkins: microservicios hacia ACR y AKS
 
-Este flujo automatiza el servicio que ya fue validado manualmente:
+Este flujo deja el proyecto a la par con las practicas de los videos 67 y 68:
 
-1. Jenkins construye la imagen con el `Dockerfile` de la raiz.
-2. Publica `discovery-server:<BUILD_NUMBER>` en ACR.
-3. Aplica el manifiesto Kubernetes.
-4. Actualiza el Deployment y espera que el rollout termine.
+1. Jenkins descarga el codigo desde GitHub.
+2. El Dockerfile multietapa usa Maven dentro de Docker para compilar
+   `discovery-server` o `config-server`.
+3. Docker construye una imagen versionada con el numero del build.
+4. Jenkins inicia sesion en Azure Container Registry (ACR) y publica la imagen.
+5. `kubectl` actualiza el Deployment en Azure Kubernetes Service (AKS).
+6. Jenkins espera el rollout y muestra los pods y Services resultantes.
 
-## Requisitos del agente Jenkins
+## Credenciales requeridas
 
-El agente que ejecuta el pipeline debe ser Windows y tener disponibles en su
-`PATH` los comandos `docker` y `kubectl`. Docker Desktop debe estar iniciado.
+En **Administrar Jenkins > Credentials > System > Global** deben existir:
 
-## Credencial de ACR
+- `acr-mitocode`: tipo **Username with password**, con el usuario administrador de ACR.
+- `kubeconfig-mitocode`: tipo **Secret file**, con el kubeconfig de AKS.
 
-Para esta demostracion se puede habilitar temporalmente el usuario administrador:
+Estas credenciales ya se referencian en `Jenkinsfile.azure`; nunca deben
+guardarse en GitHub. Para produccion se recomienda reemplazarlas por una
+identidad administrada con permisos minimos.
 
-```cmd
-az acr update --name mitocodeacr9986 --admin-enabled true
-az acr credential show --name mitocodeacr9986
-```
+## Configurar el job
 
-En Jenkins, crea una credencial global de tipo **Username with password**:
+En el job de Jenkins selecciona **Configure** y usa:
 
-- ID: `acr-mitocode`
-- Username: el valor `username` retornado por Azure.
-- Password: uno de los valores de `passwords` retornados por Azure.
+- Definition: **Pipeline script from SCM**
+- SCM: **Git**
+- Repository URL: `https://github.com/Edicruzx/microservicios-spring-cloud.git`
+- Branch Specifier: `*/main`
+- Script Path: `Jenkinsfile.azure`
 
-No copies estas claves al repositorio ni a capturas de pantalla.
+Guarda el job. La primera ejecucion registra los parametros; las siguientes se
+lanzan desde **Build with Parameters**.
 
-## Credencial de AKS
+## Parametros
 
-Genera un kubeconfig administrativo temporal fuera del repositorio:
+- `SERVICE_NAME`: elige `discovery-server` o `config-server`.
+- `VIDEO_DEMO_MODE=false`: modo recomendado. Mantiene Services internos,
+  una replica de Eureka y dos de Config Server.
+- `VIDEO_DEMO_MODE=true`: replica el video. Crea tres replicas de Eureka,
+  cinco de Config Server y un Service publico `LoadBalancer` para cada uno.
 
-```cmd
-az aks get-credentials --resource-group rg-mitocode-dev --name aks-mitocode-dev --admin --file "%TEMP%\aks-mitocode-dev-admin.yaml" --overwrite-existing
-```
-
-En Jenkins, crea una credencial global de tipo **Secret file**:
-
-- ID: `kubeconfig-mitocode`
-- File: `%TEMP%\aks-mitocode-dev-admin.yaml`
-
-El kubeconfig administrativo es apropiado solo para esta demostracion. En un
-entorno productivo debe reemplazarse por una identidad con permisos minimos.
-
-## Crear el pipeline
-
-1. Crea un nuevo elemento de tipo **Pipeline**.
-2. Usa **Pipeline script from SCM** si el repositorio esta en Git.
-3. Configura `Jenkinsfile.azure` como **Script Path**.
-4. Ejecuta **Build Now**.
-
-La imagen publicada quedara versionada con el numero de build de Jenkins.
+Ejecuta primero `discovery-server` y despues `config-server`, porque Config
+Server se registra en Eureka mediante el nombre Kubernetes
+`http://discovery-server:8761/eureka/`.
 
 ## Verificacion
 
 ```cmd
 kubectl get deployment,pods,service --namespace mitocode
-kubectl describe deployment discovery-server --namespace mitocode
+kubectl rollout status deployment/discovery-server --namespace mitocode
+kubectl rollout status deployment/config-server --namespace mitocode
 ```
 
-Para abrir Eureka localmente:
+Modo seguro, acceso local:
 
 ```cmd
 kubectl port-forward service/discovery-server 18761:8761 --namespace mitocode
+kubectl port-forward service/config-server 19000:9000 --namespace mitocode
 ```
 
-## Cierre de la demostracion
+Abre `http://localhost:18761`. Eureka debe mostrar `CONFIG-SERVER` después de
+que este termine de iniciar. Para comprobar Config Server abre
+`http://localhost:19000/product-service/desa`.
 
-AKS consume credito mientras el nodo existe. Cuando termine toda la practica:
+En modo demostracion, espera la IP publica:
+
+```cmd
+kubectl get service --namespace mitocode --watch
+```
+
+Al terminar la exposicion, vuelve a ejecutar ambos servicios con
+`VIDEO_DEMO_MODE=false`; el pipeline elimina los LoadBalancer publicos.
+
+## Costos
+
+AKS y los LoadBalancer pueden consumir credito mientras existan. Cuando toda la
+practica haya terminado y ya no necesites ningun recurso del grupo:
 
 ```cmd
 az group delete --name rg-mitocode-dev --yes --no-wait

@@ -8,8 +8,10 @@ kind: Deployment
 metadata:
   name: discovery-server
   namespace: mitocode
+  labels:
+    app: discovery-server
 spec:
-  replicas: 1
+  replicas: REPLICA_COUNT
   selector:
     matchLabels:
       app: discovery-server
@@ -20,7 +22,7 @@ spec:
     spec:
       containers:
         - name: discovery-server
-          image: mitocodeacr9986.azurecr.io/discovery-server:v1
+          image: IMAGE_REGISTRY/discovery-server:IMAGE_TAG
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -47,6 +49,8 @@ kind: Service
 metadata:
   name: discovery-server
   namespace: mitocode
+  labels:
+    app: discovery-server
 spec:
   selector:
     app: discovery-server
