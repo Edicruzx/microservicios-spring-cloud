@@ -25,7 +25,6 @@ pipeline {
     K8S_NAMESPACE = 'mitocode'
     DOCKER_EXE = 'C:\\Users\\Usuario\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
     KUBECTL_EXE = 'C:\\Users\\Usuario\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\kubectl.exe'
-    PATH+DOCKER = 'C:\\Users\\Usuario\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin'
   }
 
   stages {
